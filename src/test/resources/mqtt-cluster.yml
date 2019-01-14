@@ -1,0 +1,14 @@
+
+inbound:
+  url: tcp://localhost:7865
+  user: admin
+  pass: secret
+
+cluster:
+  self:
+    id: 1
+    address: localhost
+    port: 8888
+  heartbeat:
+    topic-prefix: some
+    rate-seconds: 1
