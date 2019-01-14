@@ -1,4 +1,4 @@
-# Overview median-meter
+# median-meter
 
 ## Contents
 
@@ -6,7 +6,6 @@
   - [Nonfunctional requirements](#nonfunctional-requirements)
   - [MQTT protocol](#mqtt-protocol)
   - [Configuration file](#configuration-file)
-  - [Build docker image](#build-docker-image)
 - [Development](#development)
   - [Prerequisites](#prerequisites)
   - [Building](#building)
@@ -51,7 +50,7 @@ The system should tolerate at least a single node failure (recover if a single i
 | **qos**      | 1                     | 1                            |
 | **retained** | flase                 | true                         |
 
-​### Configuration file
+### Configuration file
 
 ```yaml
 temperatureTimeWindowInSec: <period_length_in_seconds> # up to 1000 seconds
