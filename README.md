@@ -1,5 +1,8 @@
 # median-meter
 
+[![build_status](https://travis-ci.org/xxlabaza/median-meter.svg?branch=master)](https://travis-ci.org/xxlabaza/median-meter)
+[![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+
 ## Contents
 
 - [Description](#description)
