@@ -16,40 +16,16 @@
 
 package com.xxlabaza.test.median.meter.function;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
+import com.xxlabaza.test.median.meter.Transportable;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
 
 @Data
 @AllArgsConstructor
-class Measure implements Serializable {
+class Measure implements Transportable {
 
   private static final long serialVersionUID = -6468116542761370787L;
-
-  static Measure from (@NonNull byte[] bytes) {
-    if (bytes.length == 0) {
-      throw new IllegalArgumentException("Couldn't deserialize an object, byte array is empty");
-    }
-    val byteArrayInputStream = new ByteArrayInputStream(bytes);
-    return from(byteArrayInputStream);
-  }
-
-  @SneakyThrows
-  static Measure from (@NonNull InputStream inputStream) {
-    try (val objectInputStream = new ObjectInputStream(inputStream)) {
-      return (Measure) objectInputStream.readObject();
-    }
-  }
 
   long timestamp;
 
@@ -57,18 +33,5 @@ class Measure implements Serializable {
 
   Measure (double value) {
     this(System.currentTimeMillis(), value);
-  }
-
-  byte[] toBytes () {
-    val byteArrayOutputStream = new ByteArrayOutputStream();
-    writeTo(byteArrayOutputStream);
-    return byteArrayOutputStream.toByteArray();
-  }
-
-  @SneakyThrows
-  void writeTo (@NonNull OutputStream outputStream) {
-    try (val objectOutputStream = new ObjectOutputStream(outputStream)) {
-      objectOutputStream.writeObject(this);
-    }
   }
 }

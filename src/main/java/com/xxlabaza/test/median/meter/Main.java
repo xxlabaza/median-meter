@@ -16,17 +16,17 @@
 
 package com.xxlabaza.test.median.meter;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 
 import com.xxlabaza.test.median.meter.discovery.DiscoveryServiceClient;
-import com.xxlabaza.test.median.meter.function.OnBecomeMasterAction;
-import com.xxlabaza.test.median.meter.function.UserContextFactory;
-import com.xxlabaza.test.median.meter.hazelcast.CustomHazelcast;
+import com.xxlabaza.test.median.meter.function.MedianMeterService;
+import com.xxlabaza.test.median.meter.storage.StorageService;
 
-import com.hazelcast.config.MapConfig;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.yaml.snakeyaml.Yaml;
@@ -47,8 +47,10 @@ public final class Main {
    * @param args application's CLI arguments.
    *
    * @throws IOException in case of any error during configuration reading.
+   *
+   * @throws InterruptedException if execution was interrupted
    */
-  public static void main (String[] args) throws IOException {
+  public static void main (String[] args) throws IOException, InterruptedException {
     if (args.length != 1) {
       log.error("A user must provide exactly one argument - a path to a configuration YAML-file");
       System.exit(1);
@@ -66,18 +68,25 @@ public final class Main {
       properties = yaml.load(inputStream);
     }
 
-    val mapName = "popa";
+    val clusterClient = DiscoveryServiceClient.newInstance(properties);
 
-    CustomHazelcast.builder()
-        .discoveryClient(DiscoveryServiceClient.newInstance(properties).start())
-        .userContext(UserContextFactory.create(properties))
-        .onBecomeMasterAction(new OnBecomeMasterAction(mapName))
-        .mapConfig(new MapConfig()
-          .setName(mapName)
-          .setAsyncBackupCount(1)
-          .setTimeToLiveSeconds(3)
-        )
-        .ignite(); // he-he=)
+    val storageService = StorageService.builder()
+        .properties(properties)
+        .clusterClient(clusterClient)
+        .build()
+        .start();
+
+    val medianMeterService = MedianMeterService.builder()
+        .properties(properties)
+        .storage(storageService)
+        .build()
+        .start();
+
+    clusterClient.start();
+
+    while (medianMeterService.isRunning()) {
+      SECONDS.sleep(200);
+    }
   }
 
   private Main () {

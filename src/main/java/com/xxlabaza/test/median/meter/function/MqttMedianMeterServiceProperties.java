@@ -37,20 +37,20 @@ import org.yaml.snakeyaml.Yaml;
 @Setter(PRIVATE)
 @SuppressWarnings("unchecked")
 @NoArgsConstructor(access = PRIVATE)
-class MqttMedianMeterFunctionProperties {
+class MqttMedianMeterServiceProperties {
 
-  static MqttMedianMeterFunctionProperties load (@NonNull String fileName) {
+  static MqttMedianMeterServiceProperties load (@NonNull String fileName) {
     val path = Paths.get(fileName);
     return load(path);
   }
 
-  static MqttMedianMeterFunctionProperties load (@NonNull File file) {
+  static MqttMedianMeterServiceProperties load (@NonNull File file) {
     val path = file.toPath();
     return load(path);
   }
 
   @SneakyThrows
-  static MqttMedianMeterFunctionProperties load (@NonNull Path path) {
+  static MqttMedianMeterServiceProperties load (@NonNull Path path) {
     if (Files.notExists(path)) {
       val msg = String.format("File '%s' doesn't exist", path.toString());
       throw new IllegalArgumentException(msg);
@@ -64,8 +64,8 @@ class MqttMedianMeterFunctionProperties {
     return of(properties);
   }
 
-  static MqttMedianMeterFunctionProperties of (@NonNull Map<String, Object> properties) {
-    val result = new MqttMedianMeterFunctionProperties();
+  static MqttMedianMeterServiceProperties of (@NonNull Map<String, Object> properties) {
+    val result = new MqttMedianMeterServiceProperties();
 
     ofNullable(properties.get("temperatureTimeWindowInSec"))
         .map(Object::toString)

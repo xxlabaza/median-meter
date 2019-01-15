@@ -20,11 +20,12 @@ import static java.util.Optional.ofNullable;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.nio.ByteBuffer;
-import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.hazelcast.core.IMap;
+import com.xxlabaza.test.median.meter.MqttClientWrapper;
+import com.xxlabaza.test.median.meter.storage.StorageService;
+
 import lombok.Builder;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
@@ -41,7 +42,11 @@ class MqttSensorsListener implements IMqttMessageListener {
 
   private static final Pattern SENSOR_ID_IN_TOPIC_NAME = Pattern.compile("\\w+/(?<id>\\d+)");
 
-  IMap<Integer, Queue<Measure>> map;
+  StorageService<MeasuresWindow> storage;
+
+  MqttClientWrapper outbound;
+
+  String outboundTopicPrefix;
 
   @Override
   public void messageArrived (String topic, MqttMessage message) throws Exception {
@@ -57,14 +62,22 @@ class MqttSensorsListener implements IMqttMessageListener {
                topic, SENSOR_ID_IN_TOPIC_NAME.pattern());
       return;
     }
+    if (!storage.isMyId(sensorId)) {
+      log.debug("Sensor ID {} doesn't belog to this application instance", sensorId);
+      return;
+    }
 
-    // TODO: what to do with invalid payload?
+    val window = storage.get(sensorId)
+        .orElseGet(() -> storage.add(sensorId, new MeasuresWindow(sensorId)));
+
     ofNullable(message.getPayload())
         .map(ByteBuffer::wrap)
         .filter(it -> it.remaining() >= Double.BYTES)
         .map(ByteBuffer::getDouble)
         .map(Measure::new)
-        .map(WindowMeasureEntryProcessor::new)
-        .ifPresent(it -> map.executeOnKey(sensorId, it));
+        .map(window::median)
+        .ifPresent(median -> outbound.send(outboundTopicPrefix + sensorId, median));
+
+    // TODO: what to do with invalid payload?
   }
 }

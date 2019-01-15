@@ -18,6 +18,8 @@ package com.xxlabaza.test.median.meter.function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.xxlabaza.test.median.meter.Transportable;
+
 import lombok.val;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +36,7 @@ class MeasureTests {
     val measure = new Measure(timestamp, value);
 
     val bytes = measure.toBytes();
-    val parsed = Measure.from(bytes);
+    val parsed = (Measure) Transportable.from(bytes);
 
     assertThat(parsed).isNotNull();
 

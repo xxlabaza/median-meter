@@ -110,7 +110,7 @@ $> ./mvnw package
 To verify (execute **test**, **integration test** and [PMD](.codestyle/pmd.xml)/[checkstyle](.codestyle/checkstyle.xml)/[spotbugs](.codestyle/findbugs.xml)) and run the project, do the following:
 
 ```bash
-$> ./mvnw package verify; && java -jar target/median-meter-0.3.0.jar
+$> ./mvnw package verify; && java -jar target/median-meter-2.0.0.jar
 ...
 [INFO] -------------------------------------------------------
 [INFO]  T E S T S
@@ -153,7 +153,7 @@ ProgressMessage{id=null, status=null, stream=null, error=null, progress=null, pr
 Successfully built 8608d64b255a
 Successfully tagged xxlabaza/median-meter:latest
 [INFO] Built xxlabaza/median-meter
-[INFO] Tagging xxlabaza/median-meter with 0.3.0
+[INFO] Tagging xxlabaza/median-meter with 3.0.0
 [INFO] Tagging xxlabaza/median-meter with latest
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
