@@ -148,7 +148,7 @@ class MqttDiscoveryServiceClientPropertiesTests {
     @SneakyThrows
     private Path getConfigurationPath () {
       val classLoader = Thread.currentThread().getContextClassLoader();
-      val url = classLoader.getResource("mqtt-cluster.yml");
+      val url = classLoader.getResource("MqttDiscoveryServiceClientProperties.yml");
       val uri = url.toURI();
       return Paths.get(uri);
     }

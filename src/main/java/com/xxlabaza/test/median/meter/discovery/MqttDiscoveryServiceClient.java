@@ -89,7 +89,7 @@ class MqttDiscoveryServiceClient implements DiscoveryServiceClient {
   }
 
   @Override
-  public List<Application> getAllApplication () {
+  public List<Application> getAllApplications () {
     return Stream.concat(applicationsRegistry.applications().stream(), Stream.of(self))
         .sorted(comparing(Application::getCreatedTimestamp))
         .collect(toList());

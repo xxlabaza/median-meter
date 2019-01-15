@@ -108,7 +108,7 @@ $> ./mvnw clean package
 To verify (execute **test**, **integration test** and **PMD**/**checkstyle**/**spotbugs**) and run the project, do the following:
 
 ```bash
-$> ./mvnw package verify; && java -jar target/median-meter-1.0.0.jar
+$> ./mvnw package verify; && java -jar target/median-meter-0.1.0.jar
 ...
 [INFO] -------------------------------------------------------
 [INFO]  T E S T S

@@ -70,7 +70,7 @@ class DiscoveryServiceClientTests {
     try (val clusterClient = DiscoveryServiceClient.newInstance(emptyMap())) {
       assertThat(clusterClient).isNotNull();
 
-      assertThat(clusterClient.getAllApplication())
+      assertThat(clusterClient.getAllApplications())
           .containsExactlyInAnyOrder(clusterClient.self());
 
       assertThat(clusterClient.getApplicationsCount())
@@ -123,7 +123,7 @@ class DiscoveryServiceClientTests {
       assertThat(clusterClient.isRunning())
           .isTrue();
 
-      assertThat(clusterClient.getAllApplication())
+      assertThat(clusterClient.getAllApplications())
           .containsExactlyInAnyOrder(clusterClient.self());
 
       assertThat(clusterClient.getApplicationsCount())
@@ -135,7 +135,7 @@ class DiscoveryServiceClientTests {
 
       SECONDS.sleep(5);
 
-      assertThat(clusterClient.getAllApplication())
+      assertThat(clusterClient.getAllApplications())
           .containsExactlyInAnyOrder(clusterClient.self());
 
       assertThat(clusterClient.getApplicationsCount())
@@ -179,12 +179,12 @@ class DiscoveryServiceClientTests {
 
       assertThat(clusterClient1.getApplicationsCount())
           .isEqualTo(2);
-      assertThat(clusterClient1.getAllApplication())
+      assertThat(clusterClient1.getAllApplications())
           .containsExactlyInAnyOrder(clusterClient1.self(), clusterClient2.self());
 
       assertThat(clusterClient2.getApplicationsCount())
           .isEqualTo(2);
-      assertThat(clusterClient2.getAllApplication())
+      assertThat(clusterClient2.getAllApplications())
           .containsExactlyInAnyOrder(clusterClient1.self(), clusterClient2.self());
     }
   }
@@ -209,7 +209,7 @@ class DiscoveryServiceClientTests {
 
       assertThat(clusterClient1.getApplicationsCount())
           .isEqualTo(1);
-      assertThat(clusterClient1.getAllApplication())
+      assertThat(clusterClient1.getAllApplications())
           .containsExactlyInAnyOrder(clusterClient1.self());
     }
   }
@@ -234,7 +234,7 @@ class DiscoveryServiceClientTests {
 
       assertThat(clusterClient1.getApplicationsCount())
           .isEqualTo(1);
-      assertThat(clusterClient1.getAllApplication())
+      assertThat(clusterClient1.getAllApplications())
           .containsExactlyInAnyOrder(clusterClient1.self());
 
       assertThat(waitUntilClusterFormed(5, SECONDS, clusterClient1, clusterClient2))
@@ -242,12 +242,12 @@ class DiscoveryServiceClientTests {
 
       assertThat(clusterClient1.getApplicationsCount())
           .isEqualTo(2);
-      assertThat(clusterClient1.getAllApplication())
+      assertThat(clusterClient1.getAllApplications())
           .containsExactlyInAnyOrder(clusterClient1.self(), clusterClient2.self());
 
       assertThat(clusterClient2.getApplicationsCount())
           .isEqualTo(2);
-      assertThat(clusterClient2.getAllApplication())
+      assertThat(clusterClient2.getAllApplications())
           .containsExactlyInAnyOrder(clusterClient1.self(), clusterClient2.self());
     }
   }

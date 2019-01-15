@@ -48,7 +48,7 @@ public interface DiscoveryServiceClient extends AutoCloseable {
    *
    * @return applications in a cluster.
    */
-  List<Application> getAllApplication ();
+  List<Application> getAllApplications ();
 
   /**
    * Amount of applications in a cluster.
