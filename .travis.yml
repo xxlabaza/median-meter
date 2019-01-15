@@ -1,0 +1,27 @@
+
+language: java
+
+jdk:
+  - openjdk11
+
+install:
+  mvn install -DskipTests=true -Dmaven.javadoc.skip=true -Dgpg.skip -B -V
+
+script:
+  mvn clean verify -DskipTests=false -Dmaven.javadoc.skip=true -Dgpg.skip -B -U
+
+before_deploy:
+  - mvn help:evaluate -N -Dexpression=project.version | grep -v '\['
+  - export project_version=$(mvn help:evaluate -N -Dexpression=project.version | grep -v '\[')
+
+deploy:
+  provider: releases
+  api_key:
+    secure: D+89elYx8DWrmy141uio5E21xbCKEEUwVnUJoXEdC6+khFx3sueYN3RY4Xdgc3C9PBFlPlfNMnATN2N8dUnUTC+L+Dp8J/74P10Gt7Ve6OT8CezyFwGVH6+fDMyok3cJ5mPW+7qvkzmxfp8wwQPHXTJX9i9CKS/SDzU4DAZlZ5s59PtpM6fAUDHkTJ4ivTqcrVCWSCiGINgsFPmK0uw1MCQZc+baKKLjwcHVm+5Yop93FqLBz3E+XB6Pqu7auTXxuO3w8MiP4L+Rj7aUU529drttM+A8jTlr4YmwOR6d1LyTswpVkKpqM6U51t+TnDEWrRkJ3wKzAJPqkwYl0Fxe1oH4qPZYPrig6Gh19bHo1Rj6dWxAzUaayewgtWEU6UCzP8EgZqVr87C8ALwnn6nWI6TmwslA+jtyRKhD1hWKYnI394sqUswWXbzBLNjypkzHz0dLpcoz1iU7c3jpfwSHyhvRtNNR6HEX0Q7buuoustT2/dISwjrZjRJCkRh1fHU8j97YxqfXAN5EST5g+62fAx6bK8ciQ7Al+4MHpYVerYydmk9dj43mnA7+XbZe5fd56xHkBQUb4h9sXIHE98PEHT8R1ShgebPla64v4o/NbMKA6p4d8oWYEDEwqifyTXhuuzQDQWVT6xbg15k9Flb6tHRebazCLto/3vjawjawLjY=
+  file:
+    - "target/median-meter-$project_version.jar"
+  skip_cleanup: true
+  on:
+    tags: true
+    repo: xxlabaza/median-meter
+  name: $project_version
