@@ -9,7 +9,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-- Add median function implementation.
+\-
+
+## [0.3.0](https://github.com/xxlabaza/median-meter/releases/tag/0.3.0) - 2019-01-15
+
+Create median meter function.
+
+### Added
+
+- Median function implementation.
 
 ## [0.2.0](https://github.com/xxlabaza/median-meter/releases/tag/0.2.0) - 2019-01-15
 

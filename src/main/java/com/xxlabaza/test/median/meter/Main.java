@@ -20,9 +20,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.xxlabaza.test.median.meter.discovery.DiscoveryServiceClient;
+import com.xxlabaza.test.median.meter.function.OnBecomeMasterAction;
+import com.xxlabaza.test.median.meter.function.UserContextFactory;
 import com.xxlabaza.test.median.meter.hazelcast.CustomHazelcast;
 
 import com.hazelcast.config.MapConfig;
@@ -69,8 +70,8 @@ public final class Main {
 
     CustomHazelcast.builder()
         .discoveryClient(DiscoveryServiceClient.newInstance(properties).start())
-        .userContext(new ConcurrentHashMap<>())
-        .onBecomeMasterAction((hz, event) -> {})
+        .userContext(UserContextFactory.create(properties))
+        .onBecomeMasterAction(new OnBecomeMasterAction(mapName))
         .mapConfig(new MapConfig()
           .setName(mapName)
           .setAsyncBackupCount(1)

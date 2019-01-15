@@ -24,7 +24,7 @@ limitations under the License.
 
   <groupId>com.xxlabaza.test</groupId>
   <artifactId>median-meter</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <packaging>jar</packaging>
 
   <properties>
@@ -38,6 +38,8 @@ limitations under the License.
 
     <maven.compiler.testTarget>${java.version}</maven.compiler.testTarget>
     <maven.compiler.testSource>${java.version}</maven.compiler.testSource>
+
+    <skipAllTests>false</skipAllTests>
   </properties>
 
   <licenses>
@@ -295,6 +297,7 @@ limitations under the License.
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.22.1</version>
         <configuration>
+          <skipTests>${skipAllTests}</skipTests>
           <trimStackTrace>false</trimStackTrace>
           <includes>
             <include>**/*Test.java</include>
@@ -316,6 +319,7 @@ limitations under the License.
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>2.22.1</version>
         <configuration>
+          <skipITs>${skipAllTests}</skipITs>
           <trimStackTrace>false</trimStackTrace>
           <includes>
             <include>**/*IntegrationTest.java</include>
