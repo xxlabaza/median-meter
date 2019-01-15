@@ -95,23 +95,22 @@ For building routine automation, I am using [maven](https://maven.apache.org).
 To build the `median-meter` project, do the following:
 
 ```bash
-$> ./mvnw clean package
+$> ./mvnw package
 ...
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 35.491 s
-[INFO] Finished at: 2019-01-13T23:25:12+03:00
-[INFO] Final Memory: 50M/548M
+[INFO] Total time:  8.906 s
+[INFO] Finished at: 2019-01-15T10:21:22+03:00
 [INFO] ------------------------------------------------------------------------
 ```
 
 ### Verify and run
 
-To verify (execute **test**, **integration test** and **PMD**/**checkstyle**/**spotbugs**) and run the project, do the following:
+To verify (execute **test**, **integration test** and [PMD](.codestyle/pmd.xml)/[checkstyle](.codestyle/checkstyle.xml)/[spotbugs](.codestyle/findbugs.xml)) and run the project, do the following:
 
 ```bash
-$> ./mvnw package verify; && java -jar target/median-meter-0.1.0.jar
+$> ./mvnw package verify; && java -jar target/median-meter-0.2.0.jar
 ...
 [INFO] -------------------------------------------------------
 [INFO]  T E S T S
@@ -132,6 +131,36 @@ Also, if you do `package` or `install` goals, the tests launch automatically.
 
 ```bash
 $> ./mvnw package docker:build
+...
+[INFO] Building image xxlabaza/median-meter
+Step 1/4 : FROM  xxlabaza/server_jre
+
+ ---> 562ba6259a28
+Step 2/4 : LABEL maintainer="Artem Labazin <xxlabaza@gmail.com>"
+
+ ---> Running in f5731b55673e
+Removing intermediate container f5731b55673e
+ ---> 759fa3cd09bf
+Step 3/4 : ADD *.jar app.jar
+
+ ---> 1f98c030bb84
+Step 4/4 : ENTRYPOINT ["java", "-jar", "/app.jar"]
+
+ ---> Running in 44c0923b48ef
+Removing intermediate container 44c0923b48ef
+ ---> 8608d64b255a
+ProgressMessage{id=null, status=null, stream=null, error=null, progress=null, progressDetail=null}
+Successfully built 8608d64b255a
+Successfully tagged xxlabaza/median-meter:latest
+[INFO] Built xxlabaza/median-meter
+[INFO] Tagging xxlabaza/median-meter with 0.2.0
+[INFO] Tagging xxlabaza/median-meter with latest
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:07 min
+[INFO] Finished at: 2019-01-15T10:23:02+03:00
+[INFO] ------------------------------------------------------------------------
 ```
 
 ## Built With

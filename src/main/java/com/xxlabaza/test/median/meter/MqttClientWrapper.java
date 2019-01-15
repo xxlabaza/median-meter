@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import lombok.Builder;
@@ -80,6 +79,11 @@ public final class MqttClientWrapper implements AutoCloseable {
     subscribes = new HashMap<>();
   }
 
+  /**
+   * Connects this client to MQTT server with default connection options.
+   *
+   * @return {@code this} object for chaining calls.
+   */
   public MqttClientWrapper connect () {
     val options = new MqttConnectOptions();
     options.setAutomaticReconnect(true);
@@ -95,6 +99,13 @@ public final class MqttClientWrapper implements AutoCloseable {
     return connect(options);
   }
 
+  /**
+   * Connects this client to MQTT server with user's connection options.
+   *
+   * @param options connection options.
+   *
+   * @return {@code this} object for chaining calls.
+   */
   @SneakyThrows
   public MqttClientWrapper connect (@NonNull MqttConnectOptions options) {
     if (client.isConnected()) {
@@ -106,6 +117,11 @@ public final class MqttClientWrapper implements AutoCloseable {
     return this;
   }
 
+  /**
+   * Disconnects this client from MQTT server.
+   *
+   * @return {@code this} object for chaining calls.
+   */
   @SneakyThrows
   public MqttClientWrapper disconnect () {
     if (client.isConnected()) {
@@ -117,11 +133,29 @@ public final class MqttClientWrapper implements AutoCloseable {
     return this;
   }
 
+  /**
+   * Sends user's message to a specific topic.
+   *
+   * @param topic   MQTT topic name.
+   *
+   * @param message user's payload.
+   *
+   * @return {@code this} object for chaining calls.
+   */
   public MqttClientWrapper send (@NonNull String topic, @NonNull String message) {
     val payload = message.getBytes(UTF_8);
     return send(topic, payload);
   }
 
+  /**
+   * Sends user's message to a specific topic.
+   *
+   * @param topic MQTT topic name.
+   *
+   * @param value user's payload.
+   *
+   * @return {@code this} object for chaining calls.
+   */
   public MqttClientWrapper send (@NonNull String topic, double value) {
     val payload = ByteBuffer.allocate(Double.BYTES)
         .putDouble(value)
@@ -130,6 +164,15 @@ public final class MqttClientWrapper implements AutoCloseable {
     return send(topic, payload);
   }
 
+  /**
+   * Sends user's message to a specific topic.
+   *
+   * @param topic   MQTT topic name.
+   *
+   * @param payload user's payload.
+   *
+   * @return {@code this} object for chaining calls.
+   */
   @SneakyThrows
   public MqttClientWrapper send (@NonNull String topic, @NonNull byte[] payload) {
     val message = new MqttMessage(payload);
@@ -138,6 +181,15 @@ public final class MqttClientWrapper implements AutoCloseable {
     return this;
   }
 
+  /**
+   * Subscribes to a topic with specific handler.
+   *
+   * @param topicFilter MQTT topic filter (wildcards friendly).
+   *
+   * @param listener    user's listener.
+   *
+   * @return {@code this} object for chaining calls.
+   */
   @SneakyThrows
   public MqttClientWrapper listen (@NonNull String topicFilter, @NonNull IMqttMessageListener listener) {
     client.subscribe(topicFilter, listener);
@@ -152,10 +204,11 @@ public final class MqttClientWrapper implements AutoCloseable {
     return this;
   }
 
-  public Set<String> listeningTopicFilters () {
-    return subscribes.keySet();
-  }
-
+  /**
+   * Removes listeners by topic name.
+   *
+   * @param topicFilter MQTT topic filter (wildcards friendly).
+   */
   @SneakyThrows
   public void removeListeners (@NonNull String topicFilter) {
     client.unsubscribe(topicFilter);

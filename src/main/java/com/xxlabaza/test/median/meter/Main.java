@@ -16,18 +16,23 @@
 
 package com.xxlabaza.test.median.meter;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.xxlabaza.test.median.meter.discovery.DiscoveryServiceClient;
+import com.xxlabaza.test.median.meter.hazelcast.CustomHazelcast;
+
+import com.hazelcast.config.MapConfig;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.yaml.snakeyaml.Yaml;
 
+/**
+ * Application's entry point class.
+ */
 @Slf4j
 @SuppressWarnings({
     "PMD.AvoidLiteralsInIfCondition",
@@ -35,7 +40,14 @@ import org.yaml.snakeyaml.Yaml;
 })
 public final class Main {
 
-  public static void main (String[] args) throws IOException, InterruptedException {
+  /**
+   * Entry point.
+   *
+   * @param args application's CLI arguments.
+   *
+   * @throws IOException in case of any error during configuration reading.
+   */
+  public static void main (String[] args) throws IOException {
     if (args.length != 1) {
       log.error("A user must provide exactly one argument - a path to a configuration YAML-file");
       System.exit(1);
@@ -53,12 +65,18 @@ public final class Main {
       properties = yaml.load(inputStream);
     }
 
-    try (val discoveryClient = DiscoveryServiceClient.newInstance(properties)) {
-      discoveryClient.start();
-      SECONDS.sleep(5);
-      log.info("Is discovery client running - {}\n{}",
-               discoveryClient.isRunning(), discoveryClient.getAllApplications());
-    }
+    val mapName = "popa";
+
+    CustomHazelcast.builder()
+        .discoveryClient(DiscoveryServiceClient.newInstance(properties).start())
+        .userContext(new ConcurrentHashMap<>())
+        .onBecomeMasterAction((hz, event) -> {})
+        .mapConfig(new MapConfig()
+          .setName(mapName)
+          .setAsyncBackupCount(1)
+          .setTimeToLiveSeconds(3)
+        )
+        .ignite(); // he-he=)
   }
 
   private Main () {

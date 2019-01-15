@@ -24,7 +24,7 @@ limitations under the License.
 
   <groupId>com.xxlabaza.test</groupId>
   <artifactId>median-meter</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <packaging>jar</packaging>
 
   <properties>
@@ -48,6 +48,23 @@ limitations under the License.
     </license>
   </licenses>
 
+  <scm>
+    <url>https://github.com/xxlabaza/median-meter</url>
+    <connection>scm:git:https://github.com/xxlabaza/median-meter.git</connection>
+    <developerConnection>scm:git:https://github.com/xxlabaza/median-meter.git</developerConnection>
+    <tag>2.0.0</tag>
+  </scm>
+
+  <issueManagement>
+    <system>Github</system>
+    <url>https://github.com/xxlabaza/median-meter/issues</url>
+  </issueManagement>
+
+  <ciManagement>
+    <system>Travis</system>
+    <url>https://travis-ci.org/xxlabaza/median-meter</url>
+  </ciManagement>
+
   <developers>
     <developer>
       <id>xxlabaza</id>
@@ -61,6 +78,12 @@ limitations under the License.
       <groupId>org.eclipse.paho</groupId>
       <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
       <version>1.2.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hazelcast</groupId>
+      <artifactId>hazelcast</artifactId>
+      <version>3.11.1</version>
     </dependency>
 
     <dependency>

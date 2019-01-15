@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import com.xxlabaza.test.median.meter.discovery.DiscoveryServiceClient;
+
 import lombok.SneakyThrows;
 import lombok.val;
 import org.junit.jupiter.api.AfterEach;
