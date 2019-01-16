@@ -58,6 +58,8 @@ class DiscoveryEventProcessor implements AutoCloseable {
   }
 
   String subscribe (@NonNull DiscoveryEvent.Type type, @NonNull Consumer<DiscoveryEvent> consumer) {
+    log.debug("A new event '{}' listener added", type);
+
     val map = listeners.compute(type, (key, value) ->
         ofNullable(value).orElseGet(() -> new ConcurrentHashMap<>()));
 
@@ -69,6 +71,8 @@ class DiscoveryEventProcessor implements AutoCloseable {
 
   void submit (@NonNull DiscoveryEvent.Type type, @NonNull Application application) {
     val event = DiscoveryEvent.of(type, application);
+    log.debug("A new event submitted\n{}", event);
+
     executor.execute(() -> ofNullable(event.getType())
         .map(listeners::get)
         .filter(Objects::nonNull)

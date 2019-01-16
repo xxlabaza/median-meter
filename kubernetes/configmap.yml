@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: application-configuration
+  labels:
+    name: application-configuration
+  namespace: default
+
+data:
+  config: |-
+    ---
+    temperatureTimeWindowInSec: 3
+    inbound:
+      url: tcp://localhost:7865
+      user: admin
+      pass: secret
+    outbound:
+      url: tcp://localhost:7866
+      user: admin
+      pass: secret
+

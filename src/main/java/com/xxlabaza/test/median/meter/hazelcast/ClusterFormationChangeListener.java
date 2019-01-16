@@ -18,11 +18,8 @@ package com.xxlabaza.test.median.meter.hazelcast;
 
 import static lombok.AccessLevel.PRIVATE;
 
-import java.util.function.BiConsumer;
-
-import javax.annotation.Nullable;
-
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.HazelcastInstanceAware;
 import com.hazelcast.core.MemberAttributeEvent;
 import com.hazelcast.core.MembershipEvent;
 import com.hazelcast.core.MembershipListener;
@@ -31,19 +28,25 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.val;
 
 @ToString
 @EqualsAndHashCode
 @RequiredArgsConstructor
 @FieldDefaults(level = PRIVATE, makeFinal = true)
-class ClusterFormationChangeListener implements MembershipListener {
-
-  @Nullable
-  HazelcastInstance hazelcastInstance;
+class ClusterFormationChangeListener implements MembershipListener, HazelcastInstanceAware {
 
   @NonNull
-  BiConsumer<HazelcastInstance, MembershipEvent> action;
+  LeaderService leaderService;
+
+  @NonFinal
+  transient HazelcastInstance hazelcastInstance;
+
+  @Override
+  public void setHazelcastInstance (@NonNull HazelcastInstance hazelcastInstance) {
+    this.hazelcastInstance = hazelcastInstance;
+  }
 
   @Override
   public void memberAdded (MembershipEvent membershipEvent) {
@@ -63,9 +66,10 @@ class ClusterFormationChangeListener implements MembershipListener {
   private void process (MembershipEvent event) {
     val iterator = event.getMembers().iterator();
     val leader = iterator.next();
-    val localMember = event.getCluster().getLocalMember();
-    if (leader.equals(localMember)) {
-      action.accept(hazelcastInstance, event);
+    if (leader.localMember()) {
+      leaderService.becomeLeaderMember(hazelcastInstance, event);
+    } else {
+      leaderService.becomeRegularMember(hazelcastInstance, event);
     }
   }
 }

@@ -61,11 +61,9 @@ public final class UserContextFactory {
   }
 
   private static Supplier<MqttClientWrapper> mqttClientSupplier (MqttConnection connectionProperties) {
-    return () -> MqttClientWrapper.builder()
-        .uri(connectionProperties.getUri())
-        .username(connectionProperties.getUsername())
-        .password(connectionProperties.getPassword())
-        .build()
+    return () -> MqttClientWrapper.of(connectionProperties.getUri())
+        .withUsername(connectionProperties.getUsername())
+        .withPassword(connectionProperties.getPassword())
         .connect();
   }
 

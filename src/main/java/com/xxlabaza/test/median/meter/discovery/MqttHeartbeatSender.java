@@ -77,7 +77,8 @@ class MqttHeartbeatSender implements AutoCloseable {
     executor.shutdown();
 
     val terminated = executor.awaitTermination(1, SECONDS);
-    log.debug("Successfully closed executor - {}", terminated);
+    log.debug("Successfully closed MQTT client's (id - {}) executor - {}",
+              mqttClient.getId(), terminated);
   }
 
   void start () {
@@ -91,7 +92,7 @@ class MqttHeartbeatSender implements AutoCloseable {
     if (!running.compareAndSet(true, false)) {
       return;
     }
-    taskFuture.cancel(false);
+    taskFuture.cancel(true);
   }
 
   private class Task implements Runnable {
@@ -103,7 +104,8 @@ class MqttHeartbeatSender implements AutoCloseable {
         mqttClient.send(heartbeatTopic, selfInfoBytes);
         log.debug("Sent heartbeat message to '{}' topic", heartbeatTopic);
       } catch (Throwable ex) {
-        log.error("Error, during heartbeat sending", ex);
+        log.error("Error, during heartbeat sending from '{}'",
+                  mqttClient.getId(), ex);
       }
     }
   }

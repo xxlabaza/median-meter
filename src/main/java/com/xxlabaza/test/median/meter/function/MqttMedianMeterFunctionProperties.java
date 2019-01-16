@@ -80,7 +80,7 @@ class MqttMedianMeterFunctionProperties {
     ofNullable(properties.get("outbound"))
         .filter(it -> it instanceof Map)
         .map(it -> (Map<String, Object>) it)
-        .ifPresent(it -> result.getInbound().overwrite(it));
+        .ifPresent(it -> result.getOutbound().overwrite(it));
 
     return result;
   }
@@ -95,13 +95,38 @@ class MqttMedianMeterFunctionProperties {
   @Setter(PRIVATE)
   static class MqttConnection {
 
-    String uri = "tcp://localhost:1883";
+    String host = "localhost";
+
+    int port = 1883;
+
+    String uri;
 
     String username;
 
     String password;
 
+    String getUri () {
+      if (uri == null) {
+        uri = new StringBuilder()
+            .append("tcp://")
+            .append(host)
+            .append(':')
+            .append(port)
+            .toString();
+      }
+      return uri;
+    }
+
     void overwrite (Map<String, Object> properties) {
+      ofNullable(properties.get("host"))
+          .map(Object::toString)
+          .ifPresent(this::setHost);
+
+      ofNullable(properties.get("port"))
+          .map(Object::toString)
+          .map(Integer::parseInt)
+          .ifPresent(this::setPort);
+
       ofNullable(properties.get("url"))
           .map(Object::toString)
           .ifPresent(this::setUri);

@@ -24,7 +24,7 @@ limitations under the License.
 
   <groupId>com.xxlabaza.test</groupId>
   <artifactId>median-meter</artifactId>
-  <version>0.3.0</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <properties>

@@ -22,11 +22,13 @@ import java.nio.file.Paths;
 import java.util.Map;
 
 import com.xxlabaza.test.median.meter.discovery.DiscoveryServiceClient;
-import com.xxlabaza.test.median.meter.function.OnBecomeMasterAction;
+import com.xxlabaza.test.median.meter.function.BecomeLeaderMemberAction;
+import com.xxlabaza.test.median.meter.function.BecomeRegularMemberAction;
 import com.xxlabaza.test.median.meter.function.UserContextFactory;
 import com.xxlabaza.test.median.meter.hazelcast.CustomHazelcast;
 
 import com.hazelcast.config.MapConfig;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.yaml.snakeyaml.Yaml;
@@ -42,7 +44,7 @@ import org.yaml.snakeyaml.Yaml;
 public final class Main {
 
   /**
-   * Entry point.
+   * Entry point - parses CLI arguments, YAML-configuration and launches the App.
    *
    * @param args application's CLI arguments.
    *
@@ -65,13 +67,22 @@ public final class Main {
     try (val inputStream = Files.newInputStream(path)) {
       properties = yaml.load(inputStream);
     }
+    startApplication(properties);
+  }
 
+  /**
+   * Starts application.
+   *
+   * @param properties user's configuration properties.
+   */
+  public static void startApplication (@NonNull Map<String, Object> properties) {
     val mapName = "popa";
 
     CustomHazelcast.builder()
         .discoveryClient(DiscoveryServiceClient.newInstance(properties).start())
         .userContext(UserContextFactory.create(properties))
-        .onBecomeMasterAction(new OnBecomeMasterAction(mapName))
+        .onBecomeLeaderMemberAction(new BecomeLeaderMemberAction(mapName))
+        .onBecomeRegularMemberAction(new BecomeRegularMemberAction())
         .mapConfig(new MapConfig()
           .setName(mapName)
           .setAsyncBackupCount(1)

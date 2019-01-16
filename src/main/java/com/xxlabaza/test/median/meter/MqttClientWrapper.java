@@ -21,15 +21,12 @@ import static java.util.Optional.ofNullable;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.ToString;
@@ -40,6 +37,7 @@ import lombok.val;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 /**
@@ -51,12 +49,35 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public final class MqttClientWrapper implements AutoCloseable {
 
-  @Getter
-  String id;
+  private static final Map<String, MqttClientWrapper> CLIENTS = new ConcurrentHashMap<>();
+
+  /**
+   * Static constructor method with result caching.
+   * <p>
+   * The second method's call always return the same (cached) result as at first call.
+   *
+   * @param uri uri to MQTT service.
+   *
+   * @return new or cached MQTT client.
+   */
+  public static MqttClientWrapper of (@NonNull String uri) {
+    return CLIENTS.compute(uri, (key, value) -> {
+      if (value != null) {
+        return value;
+      }
+      return new MqttClientWrapper(key);
+    });
+  }
+
+  /**
+   * Close all known MQTT clients.
+   */
+  public static void closeAll () {
+    CLIENTS.values().forEach(MqttClientWrapper::close);
+    CLIENTS.clear();
+  }
 
   MqttClient client;
-
-  Map<String, List<IMqttMessageListener>> subscribes;
 
   @NonFinal
   String username;
@@ -64,19 +85,53 @@ public final class MqttClientWrapper implements AutoCloseable {
   @NonFinal
   String password;
 
-  @Builder
   @SneakyThrows
-  MqttClientWrapper (@NonNull String uri,
-                     String username,
-                     String password
-  ) {
-    this.username = username;
-    this.password = password;
-
-    id = UUID.randomUUID().toString();
+  private MqttClientWrapper (@NonNull String uri) {
+    val id = UUID.randomUUID().toString();
     client = new MqttClient(uri, id);
+  }
 
-    subscribes = new HashMap<>();
+  /**
+   * Returns client's unique ID.
+   *
+   * @return client's ID.
+   */
+  public String getId () {
+    return client.getClientId();
+  }
+
+  /**
+   * Sets username to MQTT server connection.
+   * <p>
+   * If client is already connected - nothing happen.
+   *
+   * @param username MQTT server's username
+   *
+   * @return {@code this} object for chaining calls.
+   */
+  @SuppressWarnings("checkstyle:HiddenField")
+  public MqttClientWrapper withUsername (String username) {
+    if (!client.isConnected()) {
+      this.username = username;
+    }
+    return this;
+  }
+
+  /**
+   * Sets password to MQTT server connection.
+   * <p>
+   * If client is already connected - nothing happen.
+   *
+   * @param password MQTT server's password
+   *
+   * @return {@code this} object for chaining calls.
+   */
+  @SuppressWarnings("checkstyle:HiddenField")
+  public MqttClientWrapper withPassword (String password) {
+    if (!client.isConnected()) {
+      this.password = password;
+    }
+    return this;
   }
 
   /**
@@ -92,6 +147,7 @@ public final class MqttClientWrapper implements AutoCloseable {
 
     ofNullable(username)
         .ifPresent(options::setUserName);
+
     ofNullable(password)
         .map(String::toCharArray)
         .ifPresent(options::setPassword);
@@ -109,10 +165,18 @@ public final class MqttClientWrapper implements AutoCloseable {
   @SneakyThrows
   public MqttClientWrapper connect (@NonNull MqttConnectOptions options) {
     if (client.isConnected()) {
-      log.debug("MQTT client '{}' was already connected to URI '{}'", id, client.getServerURI());
+      log.debug("MQTT client '{}' was already connected to URI '{}'",
+                client.getClientId(), client.getServerURI());
     } else {
-      client.connect(options);
-      log.debug("MQTT client '{}' is connected to URI '{}'", id, client.getServerURI());
+      try {
+        client.connectWithResult(options).waitForCompletion(10_000);
+      } catch (MqttException ex) {
+        log.error("Error during connection to MQTT server to '{}'",
+                  client.getServerURI(), ex);
+        throw ex;
+      }
+      log.debug("MQTT client '{}' is connected to URI '{}' - {}",
+                client.getClientId(), client.getServerURI(), client.isConnected());
     }
     return this;
   }
@@ -126,9 +190,11 @@ public final class MqttClientWrapper implements AutoCloseable {
   public MqttClientWrapper disconnect () {
     if (client.isConnected()) {
       client.disconnect(1_000);
-      log.debug("MQTT client '{}' is disconnected from URI '{}'", id, client.getServerURI());
+      log.debug("MQTT client '{}' is disconnected from URI '{}'",
+                client.getClientId(), client.getServerURI());
     } else {
-      log.debug("MQTT client '{}' was already disconnected from URI '{}'", id, client.getServerURI());
+      log.debug("MQTT client '{}' was already disconnected from URI '{}'",
+                client.getClientId(), client.getServerURI());
     }
     return this;
   }
@@ -176,10 +242,18 @@ public final class MqttClientWrapper implements AutoCloseable {
   @SneakyThrows
   public MqttClientWrapper send (@NonNull String topic, @NonNull byte[] payload) {
     val message = new MqttMessage(payload);
-    client.publish(topic, message);
-    log.debug("MQTT client '{}' sent this message to '{}' topic\n{}", id, topic, payload);
+    try {
+      client.publish(topic, message);
+    } catch (MqttException ex) {
+      log.error("ERROR, client is connected - {}", client.isConnected());
+      throw ex;
+    }
+    log.debug("MQTT client '{}' sent this message to '{}' topic\n{}",
+              client.getClientId(), topic, payload);
     return this;
   }
+
+  Map<String, Map<String, IMqttMessageListener>> subscriptions = new ConcurrentHashMap<>();
 
   /**
    * Subscribes to a topic with specific handler.
@@ -188,37 +262,88 @@ public final class MqttClientWrapper implements AutoCloseable {
    *
    * @param listener    user's listener.
    *
-   * @return {@code this} object for chaining calls.
+   * @return unique identifier of the subscription.
    */
-  @SneakyThrows
-  public MqttClientWrapper listen (@NonNull String topicFilter, @NonNull IMqttMessageListener listener) {
-    client.subscribe(topicFilter, listener);
-    subscribes.compute(topicFilter, (key, value) -> {
+  public String subscribe (@NonNull String topicFilter, @NonNull IMqttMessageListener listener) {
+    val id = UUID.randomUUID().toString();
+
+    subscriptions.compute(topicFilter, (key, value) -> {
       if (value == null) {
-        value = new LinkedList<>();
+        value = new LinkedHashMap<>();
+        subscribe(key);
       }
-      value.add(listener);
+      value.put(id, listener);
       return value;
     });
-    log.debug("MQTT client '{}' has new listener for topic '{}'", id, topicFilter);
-    return this;
+
+    log.debug("MQTT client '{}' has new listener for topic '{}'",
+              client.getClientId(), topicFilter);
+    return id;
   }
 
   /**
-   * Removes listeners by topic name.
+   * Removes subscription by topic name and its ID.
+   *
+   * @param topicFilter MQTT topic filter (wildcards friendly).
+   *
+   * @param id          unique identifier of one of topic's handlers.
+   */
+  public void unsubscribe (@NonNull String topicFilter, @NonNull String id) {
+    val map = subscriptions.get(topicFilter);
+    if (map == null) {
+      return;
+    }
+
+    map.remove(id);
+    if (map.isEmpty()) {
+      unsubscribe(topicFilter);
+    }
+  }
+
+  /**
+   * Removes subscription by topic name.
    *
    * @param topicFilter MQTT topic filter (wildcards friendly).
    */
   @SneakyThrows
-  public void removeListeners (@NonNull String topicFilter) {
-    client.unsubscribe(topicFilter);
-    subscribes.remove(topicFilter);
+  @SuppressWarnings("PMD.AvoidCatchingNPE")
+  public void unsubscribe (@NonNull String topicFilter) {
+    subscriptions.remove(topicFilter);
+    try {
+      client.unsubscribe(topicFilter);
+    } catch (NullPointerException ex) {
+      log.warn("Error during unsubscription from nonexistent topic - '{}'", topicFilter);
+    }
   }
 
   @Override
   @SneakyThrows
   public void close () {
+    if (client.isConnected()) {
+      return;
+    }
+
     disconnect();
     client.close(true);
+    CLIENTS.remove(client.getServerURI());
+  }
+
+  @SneakyThrows
+  private void subscribe (@NonNull String topicFilter) {
+    client.subscribe(topicFilter, (topic, message) -> {
+      val map = subscriptions.get(topicFilter);
+      if (map == null) {
+        return;
+      }
+
+      map.values().forEach(it -> {
+        try {
+          it.messageArrived(topic, message);
+        } catch (Exception ex) {
+          log.error("Error during handling a new message from topic '{}'\n{}",
+                    topic, message, ex);
+        }
+      });
+    });
   }
 }

@@ -17,4 +17,6 @@ limitations under the License.
   <include resource="io/appulse/logging/logback/base.xml"/>
 
   <logger name="org.testcontainers" level="INFO"/>
+  <!-- <logger name="com.xxlabaza.test.median.meter" level="DEBUG"/> -->
+  <!-- <logger name="com.xxlabaza.test.median.meter.hazelcast" level="DEBUG"/> -->
 </configuration>

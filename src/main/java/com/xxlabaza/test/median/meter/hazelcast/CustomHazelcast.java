@@ -16,6 +16,7 @@
 
 package com.xxlabaza.test.median.meter.hazelcast;
 
+import static com.hazelcast.core.MembershipEvent.MEMBER_ATTRIBUTE_CHANGED;
 import static java.util.Optional.ofNullable;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -34,9 +35,9 @@ import com.hazelcast.config.MapConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.MembershipEvent;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
@@ -73,7 +74,9 @@ public final class CustomHazelcast {
 
     DiscoveryServiceClient discoveryClient;
 
-    BiConsumer<HazelcastInstance, MembershipEvent> onBecomeMasterAction;
+    List<BiConsumer<HazelcastInstance, MembershipEvent>> onBecomeLeaderMemberActions = new ArrayList<>();
+
+    List<BiConsumer<HazelcastInstance, MembershipEvent>> onBecomeRegularMemberActions = new ArrayList<>();
 
     ConcurrentMap<String, Object> userContext;
 
@@ -105,14 +108,27 @@ public final class CustomHazelcast {
 
     /**
      * Sets an action handler, which invokes,
-     * when Hazelcast instance become a cluster master.
+     * when Hazelcast instance become a leader cluster member.
      *
      * @param handler user's handler.
      *
      * @return {@code this} builder object for chaining calls.
      */
-    public CustomHazelcastBuilder onBecomeMasterAction (@NonNull BiConsumer<HazelcastInstance, MembershipEvent> handler) {
-      this.onBecomeMasterAction = handler;
+    public CustomHazelcastBuilder onBecomeLeaderMemberAction (@NonNull BiConsumer<HazelcastInstance, MembershipEvent> handler) {
+      onBecomeLeaderMemberActions.add(handler);
+      return this;
+    }
+
+    /**
+     * Sets an action handler, which invokes,
+     * when Hazelcast instance become a regular cluster member.
+     *
+     * @param handler user's handler.
+     *
+     * @return {@code this} builder object for chaining calls.
+     */
+    public CustomHazelcastBuilder onBecomeRegularMemberAction (@NonNull BiConsumer<HazelcastInstance, MembershipEvent> handler) {
+      onBecomeRegularMemberActions.add(handler);
       return this;
     }
 
@@ -146,18 +162,10 @@ public final class CustomHazelcast {
      *
      * @return a new Hazelcast instance.
      */
-    @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
+    @SneakyThrows
     public HazelcastInstance ignite () { // nice name for starting HZ))
-      HazelcastInstance result = null;
-
       if (config == null) {
         config = new Config();
-      }
-
-      if (onBecomeMasterAction != null) {
-        val listener = new ClusterFormationChangeListener(result, onBecomeMasterAction);
-        val listenerConfig = new ListenerConfig(listener);
-        config.addListenerConfig(listenerConfig);
       }
 
       if (discoveryClient != null) {
@@ -190,7 +198,25 @@ public final class CustomHazelcast {
       mapConfigs
           .forEach(config::addMapConfig);
 
-      result = Hazelcast.newHazelcastInstance(config);
+      val leaderService = new LeaderService();
+      val listener = new ClusterFormationChangeListener(leaderService);
+      val listenerConfig = new ListenerConfig(listener);
+      config.addListenerConfig(listenerConfig);
+
+      onBecomeLeaderMemberActions.forEach(leaderService::addOnBecomeLeaderMemberAction);
+      onBecomeRegularMemberActions.forEach(leaderService::addOnBecomeRegularMemberAction);
+
+      val result = Hazelcast.newHazelcastInstance(config);
+      val cluster = result.getCluster();
+      val member = cluster.getLocalMember();
+      val members = cluster.getMembers();
+      val event = new MembershipEvent(cluster, member, MEMBER_ATTRIBUTE_CHANGED, members);
+      if (members.iterator().next().localMember()) {
+        leaderService.becomeLeaderMember(result, event);
+      } else {
+        leaderService.becomeRegularMember(result, event);
+      }
+
       return result;
     }
   }

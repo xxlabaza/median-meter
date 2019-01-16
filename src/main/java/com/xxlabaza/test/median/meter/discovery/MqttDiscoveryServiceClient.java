@@ -33,7 +33,9 @@ import com.xxlabaza.test.median.meter.MqttClientWrapper;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @ToString
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 class MqttDiscoveryServiceClient implements DiscoveryServiceClient {
@@ -62,11 +64,9 @@ class MqttDiscoveryServiceClient implements DiscoveryServiceClient {
 
     eventProcessor = new DiscoveryEventProcessor();
 
-    mqttClient = MqttClientWrapper.builder()
-        .uri(properties.getMqtt().getUri())
-        .username(properties.getMqtt().getUsername())
-        .password(properties.getMqtt().getPassword())
-        .build();
+    mqttClient = MqttClientWrapper.of(properties.getMqtt().getUri())
+        .withUsername(properties.getMqtt().getUsername())
+        .withPassword(properties.getMqtt().getPassword());
 
     mqttHeartbeatSender = MqttHeartbeatSender.builder()
         .self(self)
@@ -125,14 +125,17 @@ class MqttDiscoveryServiceClient implements DiscoveryServiceClient {
   @Override
   public DiscoveryServiceClient start () {
     if (!running.compareAndSet(false, true)) {
+      log.debug("Discovery service already started");
       return this;
     }
+    log.debug("Discovery service starting");
 
     mqttClient.connect();
     applicationsRegistry.start();
-    mqttHeartbeatSender.start();
     mqttHeartbeatReceiver.start();
+    mqttHeartbeatSender.start();
 
+    log.debug("Discovery service started");
     return this;
   }
 
@@ -144,13 +147,17 @@ class MqttDiscoveryServiceClient implements DiscoveryServiceClient {
   @Override
   public void stop () {
     if (!running.compareAndSet(true, false)) {
+      log.debug("Discovery service already stopped");
       return;
     }
+    log.debug("Discovery service stopping");
 
-    mqttHeartbeatReceiver.stop();
     mqttHeartbeatSender.stop();
+    mqttHeartbeatReceiver.stop();
     applicationsRegistry.stop();
-    mqttClient.disconnect();
+    // mqttClient.disconnect();
+
+    log.debug("Discovery service stopped");
   }
 
   @Override

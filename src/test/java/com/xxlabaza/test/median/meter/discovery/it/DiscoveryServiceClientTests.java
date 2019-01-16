@@ -29,6 +29,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import com.xxlabaza.test.median.meter.MqttClientWrapper;
 import com.xxlabaza.test.median.meter.discovery.DiscoveryServiceClient;
 
 import lombok.SneakyThrows;
@@ -53,6 +54,7 @@ class DiscoveryServiceClientTests {
   @AfterEach
   void afterEach () {
     mqtt.stop();
+    MqttClientWrapper.closeAll();
   }
 
   @Test
@@ -274,7 +276,7 @@ class DiscoveryServiceClientTests {
   private boolean waitUntilClusterFormed (long timeout, TimeUnit unit, DiscoveryServiceClient... clusterClients) {
     val clusterFormed = new CountDownLatch(clusterClients.length);
 
-    Map<String, DiscoveryServiceClient> listenerIdToCluster = Stream.of(clusterClients)
+    val listenerIdToCluster = Stream.of(clusterClients)
         .collect(toMap(it -> it.subscribe(NEW_APPLICATION, event -> clusterFormed.countDown()),
             it -> it
         ));

@@ -17,6 +17,7 @@
 package com.xxlabaza.test.median.meter.discovery;
 
 import static com.xxlabaza.test.median.meter.discovery.DiscoveryEvent.Type.HEARTBEAT;
+import static java.util.Optional.ofNullable;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,6 +28,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
@@ -43,9 +45,12 @@ class MqttHeartbeatReceiver {
 
   MqttClientWrapper mqttClient;
 
+  DiscoveryEventProcessor eventProcessor;
+
   String heartbeatTopicFilter;
 
-  DiscoveryEventProcessor eventProcessor;
+  @NonFinal
+  String heartbeatSubscriptionId;
 
   @Builder
   MqttHeartbeatReceiver (@NonNull Application self,
@@ -65,14 +70,15 @@ class MqttHeartbeatReceiver {
     if (!running.compareAndSet(false, true)) {
       return;
     }
-    mqttClient.listen(heartbeatTopicFilter, new Receiver());
+    heartbeatSubscriptionId = mqttClient.subscribe(heartbeatTopicFilter, new Receiver());
   }
 
   void stop () {
     if (!running.compareAndSet(true, false)) {
       return;
     }
-    mqttClient.removeListeners(heartbeatTopicFilter);
+    ofNullable(heartbeatSubscriptionId)
+        .ifPresent(it -> mqttClient.unsubscribe(heartbeatTopicFilter, it));
   }
 
   private class Receiver implements IMqttMessageListener {

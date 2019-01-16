@@ -28,6 +28,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import com.xxlabaza.test.median.meter.MqttClientWrapper;
 import com.xxlabaza.test.median.meter.discovery.DiscoveryServiceClient;
 import com.xxlabaza.test.median.meter.hazelcast.CustomHazelcast;
 
@@ -54,6 +55,7 @@ class CustomHazelcastTests {
   @AfterEach
   void afterEach () {
     mqtt.stop();
+    MqttClientWrapper.closeAll();
   }
 
   @Test
@@ -119,7 +121,7 @@ class CustomHazelcastTests {
       val countDownLatch = new CountDownLatch(1);
       hz1 = CustomHazelcast.builder()
           .discoveryClient(clusterClient1)
-          .onBecomeMasterAction((hz, event) -> countDownLatch.countDown())
+          .onBecomeLeaderMemberAction((hz, event) -> countDownLatch.countDown())
           .ignite();
 
       hz2 = CustomHazelcast.builder()

@@ -1,0 +1,44 @@
+apiVersion: extensions/v1beta1
+
+kind: Deployment
+metadata:
+  name: median-meter
+
+spec:
+  replicas: 3
+  minReadySeconds: 30
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: median-meter-service
+    spec:
+      containers:
+        - name: median-meter-service
+          image: xxlabaza/median-meter:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c", "cat /etc/config/configuration.yml"]
+          # livenessProbe:
+          #   httpGet:
+          #     path: /rmi/status
+          #     port: 30299
+          #   initialDelaySeconds: 20
+          #   periodSeconds: 10
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+          env:
+            - name: HTTP_SERVER_PORT
+              value: "30299"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: app-config
+            items:
+            - key: app.level
+              path: configuration.yml
+      restartPolicy: Never

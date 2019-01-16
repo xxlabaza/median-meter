@@ -19,6 +19,7 @@ package com.xxlabaza.test.median.meter.discovery;
 import static com.xxlabaza.test.median.meter.discovery.DiscoveryEvent.Type.HEARTBEAT;
 import static com.xxlabaza.test.median.meter.discovery.DiscoveryEvent.Type.NEW_APPLICATION;
 import static com.xxlabaza.test.median.meter.discovery.DiscoveryEvent.Type.REMOVE_APPLICATION;
+import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toSet;
 import static lombok.AccessLevel.PRIVATE;
@@ -106,8 +107,11 @@ class ApplicationsRegistry implements AutoCloseable {
       return;
     }
 
-    eventProcessor.unsubscribe(HEARTBEAT, heartbeatListenerId);
-    taskFuture.cancel(false);
+    ofNullable(heartbeatListenerId)
+        .ifPresent(it -> eventProcessor.unsubscribe(HEARTBEAT, it));
+
+    ofNullable(taskFuture)
+        .ifPresent(it -> it.cancel(true));
 
     applications.clear();
   }
@@ -134,6 +138,7 @@ class ApplicationsRegistry implements AutoCloseable {
           log.debug("A new application added to cluster\n{}", application);
           return new ApplicationWithScore(application);
         }
+        log.debug("Heartbeat message has come\n{}", application);
         value.resetScore();
         return value;
       });

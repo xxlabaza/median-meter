@@ -19,7 +19,8 @@ package com.xxlabaza.test.median.meter.function;
 import static com.xxlabaza.test.median.meter.function.UserContextFactory.INBOUND_MQTT_CLIENT_SUPPLIER;
 import static java.util.Optional.ofNullable;
 
-import java.util.Objects;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -31,34 +32,49 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.MembershipEvent;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 /**
- * Action handler on Hazelcast become a cluster master.
+ * Action handler on Hazelcast become a cluster regular member.
  */
+@Slf4j
 @Value
-public class OnBecomeMasterAction implements BiConsumer<HazelcastInstance, MembershipEvent> {
+public class BecomeLeaderMemberAction implements BiConsumer<HazelcastInstance, MembershipEvent> {
 
-  private static final String SENSORS_LISTENING_TOPIC_FILTER = "t/+";
+  static final String SENSORS_LISTENING_TOPIC_FILTER = "t/+";
+
+  static final String INBOUND_MQTT_CLIENT = "inbound-mqtt-client";
+
+  static Optional<MqttClientWrapper> getCreatedMqttClient (@NonNull Map<String, Object> context) {
+    return ofNullable(context.get(INBOUND_MQTT_CLIENT))
+        .filter(it -> it instanceof MqttClientWrapper)
+        .map(it -> (MqttClientWrapper) it);
+  }
 
   String mapName;
 
   @Override
   @SuppressWarnings("unchecked")
   public void accept (@NonNull HazelcastInstance hazelcastInstance, @NonNull MembershipEvent event) {
+    log.info("Node '{}' become a leader node", hazelcastInstance.getName());
+
     IMap<Integer, Queue<Measure>> map = hazelcastInstance.getMap(mapName);
     if (map == null) {
       throw new IllegalStateException("Hazelcast map '" + mapName + "' doesn't exist");
     }
 
-    val mqttClient = ofNullable(hazelcastInstance.getUserContext())
-        .filter(Objects::nonNull)
-        .map(it -> it.get(INBOUND_MQTT_CLIENT_SUPPLIER))
-        .filter(it -> it instanceof Supplier)
-        .map(it -> (Supplier<MqttClientWrapper>) it)
-        .map(Supplier::get)
-        .orElseThrow(RuntimeException::new);
+    val userContext = hazelcastInstance.getUserContext();
+    val mqttClient = getCreatedMqttClient(userContext)
+        .orElseGet(() -> ofNullable(userContext.get(INBOUND_MQTT_CLIENT_SUPPLIER))
+            .filter(it -> it instanceof Supplier)
+            .map(it -> (Supplier<MqttClientWrapper>) it)
+            .map(Supplier::get)
+            .orElseThrow(RuntimeException::new));
 
-    mqttClient.listen(SENSORS_LISTENING_TOPIC_FILTER, new MqttSensorsListener(map));
+    mqttClient.connect();
+    userContext.put(INBOUND_MQTT_CLIENT, mqttClient);
+
+    mqttClient.subscribe(SENSORS_LISTENING_TOPIC_FILTER, new MqttSensorsListener(map));
   }
 }
