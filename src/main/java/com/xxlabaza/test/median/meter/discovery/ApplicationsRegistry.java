@@ -84,7 +84,7 @@ class ApplicationsRegistry implements AutoCloseable {
     executor.shutdown();
 
     val terminated = executor.awaitTermination(1, SECONDS);
-    log.debug("Successfully closed executor - {}", terminated);
+    log.info("Successfully closed executor - {}", terminated);
   }
 
   void start () {
@@ -104,8 +104,10 @@ class ApplicationsRegistry implements AutoCloseable {
 
   void stop () {
     if (!running.compareAndSet(true, false)) {
+      log.warn("Application registry already stopped");
       return;
     }
+    log.info("Application registry stopping");
 
     ofNullable(heartbeatListenerId)
         .ifPresent(it -> eventProcessor.unsubscribe(HEARTBEAT, it));
@@ -114,6 +116,8 @@ class ApplicationsRegistry implements AutoCloseable {
         .ifPresent(it -> it.cancel(true));
 
     applications.clear();
+
+    log.info("Application registry stopped");
   }
 
   Set<Application> applications () {

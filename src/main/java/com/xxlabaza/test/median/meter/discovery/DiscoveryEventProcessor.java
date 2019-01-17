@@ -54,7 +54,7 @@ class DiscoveryEventProcessor implements AutoCloseable {
     executor.shutdown();
 
     val terminated = executor.awaitTermination(1, SECONDS);
-    log.debug("Successfully closed executor - {}", terminated);
+    log.info("Successfully closed executor - {}", terminated);
   }
 
   String subscribe (@NonNull DiscoveryEvent.Type type, @NonNull Consumer<DiscoveryEvent> consumer) {

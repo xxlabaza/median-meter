@@ -125,17 +125,17 @@ class MqttDiscoveryServiceClient implements DiscoveryServiceClient {
   @Override
   public DiscoveryServiceClient start () {
     if (!running.compareAndSet(false, true)) {
-      log.debug("Discovery service already started");
+      log.info("Discovery service already started");
       return this;
     }
-    log.debug("Discovery service starting");
+    log.info("Discovery service starting");
 
     mqttClient.connect();
     applicationsRegistry.start();
     mqttHeartbeatReceiver.start();
     mqttHeartbeatSender.start();
 
-    log.debug("Discovery service started");
+    log.info("Discovery service started");
     return this;
   }
 
@@ -147,17 +147,17 @@ class MqttDiscoveryServiceClient implements DiscoveryServiceClient {
   @Override
   public void stop () {
     if (!running.compareAndSet(true, false)) {
-      log.debug("Discovery service already stopped");
+      log.warn("Discovery service already stopped");
       return;
     }
-    log.debug("Discovery service stopping");
+    log.info("Discovery service stopping");
 
     mqttHeartbeatSender.stop();
     mqttHeartbeatReceiver.stop();
     applicationsRegistry.stop();
     // mqttClient.disconnect();
 
-    log.debug("Discovery service stopped");
+    log.info("Discovery service stopped");
   }
 
   @Override

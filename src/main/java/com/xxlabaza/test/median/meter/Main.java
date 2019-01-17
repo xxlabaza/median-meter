@@ -58,7 +58,7 @@ public final class Main {
 
     val path = Paths.get(args[0]);
     if (Files.notExists(path) || Files.isDirectory(path)) {
-      log.error("A configuration file '{}' doesn't exists", path);
+      log.error("A configuration file '{}' doesn't exists or is is not a file", path);
       System.exit(1);
     }
 
@@ -67,6 +67,8 @@ public final class Main {
     try (val inputStream = Files.newInputStream(path)) {
       properties = yaml.load(inputStream);
     }
+
+    log.info("Starting application");
     startApplication(properties);
   }
 
@@ -89,6 +91,8 @@ public final class Main {
           .setTimeToLiveSeconds(3)
         )
         .ignite(); // he-he=)
+
+    log.info("Application started");
   }
 
   private Main () {

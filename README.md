@@ -189,25 +189,43 @@ To see, deployments and existing pods - enter the commands below:
 ```bash
 $> kubectl get deployments
 NAME           DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-median-meter   3         3         3            3           8s
+median-meter   3         3         3            3           20s
 
 $> kubectl get pods
-NAME                             READY     STATUS              RESTARTS   AGE
-median-meter-76bdbdcf74-5tjcb    0/1       ContainerCreating   0          2m
-median-meter-76bdbdcf74-6w7xs    0/1       ContainerCreating   0          2m
-median-meter-76bdbdcf74-xc88m    0/1       ContainerCreating   0          2m
+NAME                            READY     STATUS    RESTARTS   AGE
+median-meter-6d78dbccf4-64l9p   1/1       Running   0          21s
+median-meter-6d78dbccf4-q9crj   1/1       Running   0          21s
+median-meter-6d78dbccf4-xq5st   1/1       Running   0          21s
 ```
 
 You also are able to see `pod`'s logs, like this:
 
 ```bash
-$> kubectl logs median-meter-76bdbdcf74-5tjcb
+$> kubectl logs median-meter-6d78dbccf4-64l9p
+...
+INFO: [172.17.0.3]:8913 [dev] [3.11.1] [172.17.0.3]:8913 is STARTED
+2019-01-17 14:08:13.862  INFO   --- [           main] com.xxlabaza.test.median.meter.Main      : Application started
+Jan 17, 2019 2:08:15 PM com.hazelcast.nio.tcp.TcpIpConnection
+INFO: [172.17.0.3]:8913 [dev] [3.11.1] Initialized new cluster connection between /172.17.0.3:8913 and /172.17.0.5:34241
+Jan 17, 2019 2:08:18 PM com.hazelcast.nio.tcp.TcpIpConnection
+INFO: [172.17.0.3]:8913 [dev] [3.11.1] Initialized new cluster connection between /172.17.0.3:8913 and /172.17.0.4:37567
+Jan 17, 2019 2:08:24 PM com.hazelcast.internal.cluster.ClusterService
+INFO: [172.17.0.3]:8913 [dev] [3.11.1]
+
+Members {size:3, ver:3} [
+        Member [172.17.0.3]:8913 - 704004ad-49a2-48aa-9de6-e6f749c740c3 this
+        Member [172.17.0.5]:8913 - 3e19c3d6-9026-4874-a312-5220c3fee2c3
+        Member [172.17.0.4]:8913 - 8334ed1f-678c-439b-8e24-785243955eb6
+]
 ```
 
 To remove `pod`s and `ConfigMap` entity, just type the following commands:
 
 ```bash
-$> kubectl delete daemonsets,replicasets,services,deployments,pods,rc,configmap --all
+$> kubectl delete \
+      daemonsets,replicasets,services,deployments,pods,rc,configmap \
+      --all
+
 replicaset.extensions "median-meter-749674d764" deleted
 service "kubernetes" deleted
 deployment.extensions "median-meter" deleted
@@ -236,7 +254,7 @@ All previous commands together:
   kubectl create \
       -f ./src/main/kubernetes/deployment.yml \
     && \
-  sleep 10 \
+  sleep 20 \
     && \
   kubectl get deployments \
     && \

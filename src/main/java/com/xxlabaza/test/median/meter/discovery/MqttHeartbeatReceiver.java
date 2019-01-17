@@ -75,10 +75,15 @@ class MqttHeartbeatReceiver {
 
   void stop () {
     if (!running.compareAndSet(true, false)) {
+      log.warn("Heartbeat receiver already stopped");
       return;
     }
+    log.info("Heartbeat receiver stopping");
+
     ofNullable(heartbeatSubscriptionId)
         .ifPresent(it -> mqttClient.unsubscribe(heartbeatTopicFilter, it));
+
+    log.info("Heartbeat receiver stopped");
   }
 
   private class Receiver implements IMqttMessageListener {

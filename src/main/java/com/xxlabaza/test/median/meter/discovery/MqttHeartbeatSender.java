@@ -90,9 +90,14 @@ class MqttHeartbeatSender implements AutoCloseable {
 
   void stop () {
     if (!running.compareAndSet(true, false)) {
+      log.warn("Heartbeat sender already stopped");
       return;
     }
+    log.info("Heartbeat sender stopping");
+
     taskFuture.cancel(true);
+
+    log.info("Heartbeat sender stopped");
   }
 
   private class Task implements Runnable {
