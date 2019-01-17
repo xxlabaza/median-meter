@@ -14,7 +14,7 @@
   - [Building](#building)
   - [Verify and run](#verify-and-run)
   - [Build docker image](#build-docker-image)
-- [Kubernetes](#kubernetes)
+- [Kubernetes support](#kubernetes-support)
 - [Built With](#built-with)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
@@ -164,7 +164,9 @@ Successfully tagged xxlabaza/median-meter:latest
 [INFO] ------------------------------------------------------------------------
 ```
 
-## Kubernetes
+## Kubernetes support
+
+> **IMPORTANT:** `median-meter` has a prebuild [image](https://cloud.docker.com/u/xxlabaza/repository/docker/xxlabaza/median-meter) on `Docker Hub`, so you don't need to build it before using `Kubernetes`.
 
 First of all, we need to provide a configuration file for median-meter service. I use a `ConfigMap` for that purpose and create it from already prepared `configuration.yml` file:
 
