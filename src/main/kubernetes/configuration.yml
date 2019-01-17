@@ -1,0 +1,12 @@
+
+temperatureTimeWindowInSec: 5
+
+inbound:
+  url: tcp://192.168.88.85:1883
+  # user: admin
+  # pass: secret
+
+outbound:
+  url: tcp://192.168.88.85:1883
+  # user: admin
+  # pass: secret

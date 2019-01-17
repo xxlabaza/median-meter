@@ -14,6 +14,7 @@
   - [Building](#building)
   - [Verify and run](#verify-and-run)
   - [Build docker image](#build-docker-image)
+- [Kubernetes](#kubernetes)
 - [Built With](#built-with)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
@@ -161,6 +162,85 @@ Successfully tagged xxlabaza/median-meter:latest
 [INFO] Total time:  01:07 min
 [INFO] Finished at: 2019-01-15T10:23:02+03:00
 [INFO] ------------------------------------------------------------------------
+```
+
+## Kubernetes
+
+First of all, we need to provide a configuration file for median-meter service. I use a `ConfigMap` for that purpose and create it from already prepared `configuration.yml` file:
+
+```bash
+$> kubectl create configmap median-meter-configmap \
+     --from-file=./src/main/kubernetes/configuration.yml
+
+configmap "median-meter-configmap" created
+```
+
+Then, we could create our deployment, which persists previously created `ConfigMap` as file in container's file system:
+
+```bash
+$> kubectl create \
+     -f ./src/main/kubernetes/deployment.yml
+
+deployment.apps "median-meter" created
+```
+
+To see, deployments and existing pods - enter the commands below:
+
+```bash
+$> kubectl get deployments
+NAME           DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+median-meter   3         3         3            3           8s
+
+$> kubectl get pods
+NAME                             READY     STATUS              RESTARTS   AGE
+median-meter-76bdbdcf74-5tjcb    0/1       ContainerCreating   0          2m
+median-meter-76bdbdcf74-6w7xs    0/1       ContainerCreating   0          2m
+median-meter-76bdbdcf74-xc88m    0/1       ContainerCreating   0          2m
+```
+
+You also are able to see `pod`'s logs, like this:
+
+```bash
+$> kubectl logs median-meter-76bdbdcf74-5tjcb
+```
+
+To remove `pod`s and `ConfigMap` entity, just type the following commands:
+
+```bash
+$> kubectl delete daemonsets,replicasets,services,deployments,pods,rc,configmap --all
+replicaset.extensions "median-meter-749674d764" deleted
+service "kubernetes" deleted
+deployment.extensions "median-meter" deleted
+pod "median-meter-749674d764-6mv59" deleted
+pod "median-meter-749674d764-6st6k" deleted
+pod "median-meter-749674d764-8hjdg" deleted
+pod "median-meter-749674d764-9grzw" deleted
+pod "median-meter-749674d764-fs9f4" deleted
+pod "median-meter-749674d764-l5jth" deleted
+pod "median-meter-749674d764-nwkft" deleted
+pod "median-meter-749674d764-qjt9c" deleted
+pod "median-meter-749674d764-w8wmc" deleted
+configmap "median-meter-configmap" deleted
+```
+
+All previous commands together:
+
+```bash
+> kubectl delete \
+      daemonsets,replicasets,services,deployments,pods,rc,configmap \
+      --all \
+    && \
+  kubectl create configmap median-meter-configmap \
+      --from-file=./src/main/kubernetes/configuration.yml \
+    && \
+  kubectl create \
+      -f ./src/main/kubernetes/deployment.yml \
+    && \
+  sleep 10 \
+    && \
+  kubectl get deployments \
+    && \
+  kubectl get pods
 ```
 
 ## Built With

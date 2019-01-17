@@ -1,0 +1,38 @@
+
+apiVersion: apps/v1
+
+kind: Deployment
+metadata:
+  name: median-meter
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: median-meter-service
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  template:
+    metadata:
+      labels:
+        app: median-meter-service
+
+    spec:
+      containers:
+
+        - name: median-meter-service
+          image: xxlabaza/median-meter:latest
+          imagePullPolicy: Always # just for skipping image caching issue
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+
+      volumes:
+        - name: config-volume
+          configMap:
+            name: median-meter-configmap

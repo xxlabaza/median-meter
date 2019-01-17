@@ -30,6 +30,7 @@ Add Kubernetes support.
 - Don't disconnect from `MQTT`, when `MqttDiscoveryServiceClient` is stopped;
 - Add more debug logs;
 - Properly stop/close services (add null-checks);
+- Add configuration argument to `Dockerfile`.
 
 ## [0.3.0](https://github.com/xxlabaza/median-meter/releases/tag/0.3.0) - 2019-01-15
 
